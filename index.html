@@ -3,7 +3,10 @@
   <head>
     <meta charset="utf-8">
     <title>Videobearbeitung</title>
-    <link rel="stylesheet" href="http://twitter.github.com/bootstrap/1.4.0/bootstrap.min.css">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/ui-lightness/jquery.css">
+    <script src="jquery/jquery.js"></script>
+    <script src="jquery/jqueryui.js"></script>
     <script src="code.js"></script>
     <style type="text/css">
       /* Override some defaults */
@@ -80,16 +83,34 @@
             </div>
           </div>
           <div class="span4">
-            <select onchange="setType(this.options[this.selectedIndex].value)">
-              <option value="original">Original</option>
-              <option value="sw">Schwarz/Weiß</option>
-              <option value="invert">Invertieren</option>
-              <option value="box">Box-Filter (Mittelwert-Filter)</option>
-              <option value="sobel">Sobel-Operator</option>
-              <option value="laplace">Laplace</option>
-              <option value="gaussian">Gaussian</option>
-              <option value="prewitt">Prewitt</option>
-            </select>
+            <div style="padding-bottom: 10px;">
+              <select onchange="setType(this.options[this.selectedIndex].value)">
+                <option value="original">Original</option>
+                <option value="invert">Invertieren</option>
+                <option value="box">Box-Filter (Mittelwert-Filter)</option>
+                <option value="sobelhor">Sobel Horizontal Operator 5x5</option>
+                <option value="sobelvert">Sobel Vertical Operator 5x5</option>
+                <option value="sobelcross">Sobel Cross Operator 5x5</option>
+                <option value="laplace">Laplace</option>
+                <option value="laplacedia">Laplace Diagonal</option>
+                <option value="laplace5x5">Laplace 5x5</option>
+                <option value="gaussian">Gaussian</option>
+                <option value="prewittX">Prewitt X-Richtung</option>
+                <option value="prewittY">Prewitt Y-Richtung</option>
+                <option value="sharpen">Sharpen</option>
+                <option value="varsharpen">Sharpen (variabel)</option>
+                <option value="relief">Relief</option>
+                <option value="gausssep">Gauss Seperable</option>
+                <option value="sobelsep">Sobel Seperable</option>
+                <option value="boxsep">Box Seperable</option>
+                <option value="mosaic">Mosaic</option>
+                <option value="gauss5x5">Gauss 5x5</option>
+                <option value="highpass">Hochpass</option>
+              </select>
+            </div>
+            <div id="slider"></div>
+            <p>Sättigung:</p>
+            <div id="saturation"></div>
           </div>
         </div>
       </div>
