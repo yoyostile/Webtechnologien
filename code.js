@@ -192,14 +192,13 @@ function processImage() {
     else if(type == 'laplacedia')
         convolve(normalizeKernel2D(laplaceKernelDiagonal));
     else if(type == 'laplace5x5')
-        convolve(normalizeKernel2D(laplace5x5));
+        convolveVariable(normalizeKernel2D(laplace5x5));
     else if(type == 'gaussian') {
         $("#slider").show();
         for(var i = 0; i <= slider; i++) {
             convolve(normalizeKernel2D(gaussianKernel));
         }
     } else if(type == 'prewittX') {
-
         convolve(normalizeKernel2D(prewittX));
     } else if(type == 'prewittY') {
         convolve(normalizeKernel2D(prewittY));
