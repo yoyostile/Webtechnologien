@@ -186,7 +186,7 @@ function processImage() {
     else if(type == 'invert')
         invert();
     else if(type == 'sobel')
-        convolve((sobelKernel));
+        convolve(normalizeKernel2D(sobelKernel));
     else if(type == 'laplace')
         convolve(normalizeKernel2D(laplaceKernel));
     else if(type == 'laplacedia')
