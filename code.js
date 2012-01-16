@@ -1,9 +1,12 @@
+/*
+ * Deklarierung diverser globaler Variablen
+ */
 var video;
 var canvas;
 var context;
 var type = 'original';
 var slider = 0;
-var saturation = 0;
+var saturation = 100;
 
 var boxKernel;
 var sobelKernel;
@@ -22,22 +25,30 @@ var boxX;
 var boxY;
 var gaussiangross;
 
+// Tonwertkorrektur
+var high = 255;
+var low = 0;
+
+
+/*
+ * Methode initialisiert die diversen Kernel, wenn nötig wird der Kernel normalisiert.
+ * ... eigentlich schwachsinn, das so zu machen.
+ */
 function initKernel() {
-    boxKernel = [
-            [1/9, 1/9, 1/9],
-            [1/9, 1/9, 1/9],
-            [1/9, 1/9, 1/9]
-            ];
     laplaceKernel = [
             [0, 1, 0],
             [1, -4, 1],
             [0, 1, 0]
             ];
+    laplaceKernel = normalizeKernel2D(laplaceKernel);
+
     laplaceKernelDiagonal = [
             [1, 1, 1],
             [1, -8, 1],
             [1, 1, 1]
             ];
+    laplaceKernelDiagonal = normalizeKernel2D(laplaceKernelDiagonal);
+
     laplace5x5 = [
             [-1,-3,-4,-3,-1],
             [-3,0,6,0,-3],
@@ -45,36 +56,43 @@ function initKernel() {
             [-3,0,6,0,-3],
             [-1,-3,-4,-3,-1]
             ];
+    laplace5x5 = normalizeKernel2D(laplace5x5);
+
     gaussianKernel = [
             [1, 2, 1],
             [2, 4, 2],
             [1, 2, 1]
             ];
+    gaussianKernel = normalizeKernel2D(gaussianKernel);
+
     prewittX = [
             [-1, 0, 1],
             [-1, 0, 1],
             [-1, 0, 1]
             ];
+    prewittX = normalizeKernel2D(prewittX);
+
     prewittY = [
             [-1,-1,-1],
             [0,0,0],
             [1,1,1]
             ];
+    prewittY = normalizeKernel2D(prewittY);
+
     sharpenKernel = [
             [0, -2, 0],
             [-2, 15, -2],
             [0, -2, 0]
             ];
-    varSharpenKernel = [
-            [0, -slider/20, 0],
-            [-slider/20, 4*(slider/15)+1, -slider/20],
-            [0, -slider/20, 0]
-            ];
+    sharpenKernel = normalizeKernel2D(sharpenKernel);
+
     reliefKernel = [
             [-2, -1, 0],
             [-1, 1, 1],
             [0, 1, 2]
             ];
+    reliefKernel = normalizeKernel2D(reliefKernel);
+
     gaussiangross = [
             [1,4,7,4,1],
             [4,16,26,16,4],
@@ -82,6 +100,8 @@ function initKernel() {
             [4,16,26,16,4],
             [1,4,7,4,1]
             ];
+    gaussiangross = normalizeKernel2D(gaussiangross);
+
     highpass = [
             [-1,-1,-1,-1,-1],
             [-1,-1,-1,-1,-1],
@@ -89,6 +109,8 @@ function initKernel() {
             [-1,-1,-1,-1,-1],
             [-1,-1,-1,-1,-1]
             ];
+    highpass = normalizeKernel2D(highpass);
+
     sobelcross = [
             [-1,-2,0,2,1],
             [-2,-4,0,4,0],
@@ -96,6 +118,8 @@ function initKernel() {
             [2,4,0,-4,-2],
             [1,2,0,-2,1]
             ];
+    sobelcross = normalizeKernel2D(sobelcross);
+
     sobelvert = [
             [1,0,-2,0,1],
             [4,0,-8,0,4],
@@ -103,6 +127,8 @@ function initKernel() {
             [4,0,-8,0,4],
             [1,0,-2,0,1]
             ];
+    sobelvert = normalizeKernel2D(sobelvert);
+
     sobelhor = [
             [1,4,6,4,1],
             [0,0,0,0,0],
@@ -110,39 +136,79 @@ function initKernel() {
             [0,0,0,0,0],
             [1,4,6,4,1]
             ];
+    sobelhor = normalizeKernel2D(sobelhor);
+
     gaussX = [1, 2, 1];
+    gaussX = normalizeKernel1D(gaussX);
     gaussY = [1, 2, 1];
+    gaussY = normalizeKernel1D(gaussY);
     sobelX = [1, 0, -1];
+    sobelX = normalizeKernel1D(sobelX);
     sobelY = [1, 2, 1];
-    boxX = [1, 1, 1];
-    boxY = [1, 1, 1];
+    sobelY = normalizeKernel1D(sobelY);
+    boxX = [1/121,1/121,1/121,1/121,1/121,1/121,1/121,1/121,1/121,1/121,1/121];
+    boxX = normalizeKernel1D(boxX);
+    boxY = [1/121,1/121,1/121,1/121,1/121,1/121,1/121,1/121,1/121,1/121,1/121];
+    boxY = normalizeKernel1D(boxY);
 }
 
+/*
+ * Aktualisiert den Sharpen-Kernel, der über einen Slider reguliert werden kann.
+ */
+function changeKernel() {
+    varSharpenKernel = [
+            [0, -slider/20, 0],
+            [-slider/20, 4*(slider/15)+1, -slider/20],
+            [0, -slider/20, 0]
+            ];
+    varSharpenKernel = normalizeKernel2D(varSharpenKernel);
+}
 
+/*
+ * Instanzvariablen, die für den FPS-Counter notwendig sind
+ */
 var drawInterval = 1;
 var frameCount = 0;
 var fps = 0;
 var maxfps = 1 / (drawInterval / 1000);
 var lastTime = new Date();
 
+/*
+ * Initialisiert die Anwendung. Slider werden erstellt und falls notwendig versteckt.
+ * Kernel werden initialisiert.
+ * Video- und Canvas-Elemente werden aus der HTML gefetched, ein EventListener wird auf den
+ * Video-Spieler gelegt, sodass die draw()-Methode ausschließlich ausgeführt wird, wenn das Video läuft.
+ */
 function init() {
     $("#slider").slider({
         max: 100,
         min: 0,
         slide: function(event, ui) {
             slider = ui.value;
-            initKernel();
+            changeKernel();
         }
     });
     $("#slider").hide();
     $("#saturation").slider({
         max: 100,
         min: 0,
+        value: 100,
         slide: function(event, ui) {
             saturation = ui.value;
         }
     });
+    $("#contrast").slider({
+        range: true,
+        max: 255,
+        min: 0,
+        values: [0, 255],
+        slide: function(event, ui) {
+            low = ui.values[0];
+            high = ui.values[1];
+        }
+    });
     initKernel();
+    changeKernel();
 
     video = document.getElementById('video');
     canvas = document.getElementById('canvas');
@@ -155,6 +221,11 @@ function init() {
     }, false);
 }
 
+/*
+ * Returned wenn das Video pausiert / beendet ist.
+ * FPS-Berechnungen und Ausgabe.
+ * processImage() prozessiert das aktuelle Bild.
+ */
 function draw() {
     if(video.paused || video.ended) return false;
     context.drawImage(video,0,0);
@@ -177,8 +248,15 @@ function draw() {
     setTimeout(draw,drawInterval);
 }
 
+/*
+ * Nicht schön, funktioniert aber.
+ * Startet den zugehörigen Effekt, abhängig von der Auswahl im Dropdown-Menü.
+ * Iteration bspw. bei Gaussian Blur.
+ */
 function processImage() {
-    sw();
+    if(saturation < 100) sw();
+    if(low > 0 || high < 255)
+        contrast();
     if(type == 'original')
         return;
     else if(type == 'box')
@@ -186,56 +264,63 @@ function processImage() {
     else if(type == 'invert')
         invert();
     else if(type == 'sobel')
-        convolve(normalizeKernel2D(sobelKernel));
+        convolve(sobelKernel);
     else if(type == 'laplace')
-        convolve(normalizeKernel2D(laplaceKernel));
+        convolve(laplaceKernel);
     else if(type == 'laplacedia')
-        convolve(normalizeKernel2D(laplaceKernelDiagonal));
+        convolve(laplaceKernelDiagonal);
     else if(type == 'laplace5x5')
-        convolveVariable(normalizeKernel2D(laplace5x5));
+        convolveVariable((laplace5x5));
     else if(type == 'gaussian') {
         $("#slider").show();
         for(var i = 0; i <= slider; i++) {
-            convolve(normalizeKernel2D(gaussianKernel));
+            convolve((gaussianKernel));
         }
     } else if(type == 'prewittX') {
-        convolve(normalizeKernel2D(prewittX));
+        convolve((prewittX));
     } else if(type == 'prewittY') {
-        convolve(normalizeKernel2D(prewittY));
+        convolve((prewittY));
     } else if(type == 'sharpen')
-        convolve(normalizeKernel2D(sharpenKernel));
+        convolve((sharpenKernel));
     else if(type == 'relief') {
-        convolve(normalizeKernel2D(reliefKernel));
+        convolve((reliefKernel));
     } else if(type == 'gausssep')
-        convolveSeperable(normalizeKernel1D(gaussX), normalizeKernel1D(gaussY));
+        convolveSeperable((gaussX), (gaussY));
     else if(type == 'sobelsep')
-        convolveSeperable(normalizeKernel1D(sobelX), normalizeKernel1D(sobelY));
+        convolveSeperable((sobelX), (sobelY));
     else if(type == 'boxsep')
-        convolveSeperable(normalizeKernel1D(boxX), normalizeKernel1D(boxY));
+        convolveSeperable((boxX), (boxY));
     else if(type == 'varsharpen') {
         $("#slider").show();
-        convolve(normalizeKernel2D(varSharpenKernel));
+        convolve((varSharpenKernel));
     } else if(type == 'mosaic') {
         $("#slider").show();
         mosaic();
     } else if(type == 'gauss5x5') {
-        convolveVariable(normalizeKernel2D(gaussiangross));
+        convolveVariable((gaussiangross));
     } else if(type == 'highpass') {
-        convolveVariable(normalizeKernel2D(highpass));
+        convolveVariable((highpass));
     } else if(type == 'sobelcross') {
-        convolveVariable(normalizeKernel2D(sobelcross));
+        convolveVariable((sobelcross));
     } else if(type == 'sobelvert') {
-        convolveVariable(normalizeKernel2D(sobelvert));
+        convolveVariable((sobelvert));
     } else if(type == 'sobelhor') {
-        convolveVariable(normalizeKernel2D(sobelhor));
+        convolveVariable((sobelhor));
     }
 }
 
+/*
+ * Setzt Type aus Dropdown. Slider wird versteckt.
+ */
 function setType(type) {
     this.type = type;
     $("#slider").hide();
 }
 
+/*
+ * Normalisiert eindimensionale Kernel. Ist eigentlich quatsch,
+ * da der Vorfaktor nicht für die Zusammengesetzte Matrix Hx * Hy stimmt.
+ */
 function normalizeKernel1D(kernel) {
     var sum = 0;
     for(var i = 0; i < kernel.length; i++)
@@ -249,6 +334,9 @@ function normalizeKernel1D(kernel) {
     return kernel;
 }
 
+/*
+ * Normalisiert zweidimensionale Kernel, falls nötig.
+ */
 function normalizeKernel2D(kernel) {
     var sum = 0;
     for(var i = 0; i < kernel.length; i++) {
@@ -268,6 +356,11 @@ function normalizeKernel2D(kernel) {
     return kernel;
 }
 
+
+/*
+ * Effekt baut ein wunderbares Mosaik.
+ * Kann über Slider in der größe der Rechtecke variiert werden.
+ */
 function mosaic() {
     pixels = context.getImageData(0,0,canvas.width, canvas.height);
     var output = context.createImageData(canvas.width, canvas.height);
@@ -276,7 +369,7 @@ function mosaic() {
     var w = pixels.width;
     var h = pixels.height;
 
-    var k = Math.floor(slider/3);
+    var k = Math.floor(slider/2);
     if(k <= 2) return;
     if(k % 2 == 0) k++;
     var length = Math.floor(k/2);
@@ -308,6 +401,10 @@ function mosaic() {
     context.putImageData(output,0,0);
 }
 
+/*
+ * Lineare Faltung für beliebig große Filterkerne.
+ * Optimierungsbedarf: Performance.
+ */
 function convolveVariable(kernel) {
     if(kernel == null) return;
     pixels = context.getImageData(0,0,canvas.width, canvas.height);
@@ -338,6 +435,9 @@ function convolveVariable(kernel) {
     context.putImageData(output,0,0);
 }
 
+/*
+ * Leicht optimierte Variante der linearen Faltung ausschließlich für 3x3-Filterkerne.
+ */
 function convolve(kernel) {
     if(kernel == null) return;
     pixels = context.getImageData(0,0,canvas.width, canvas.height);
@@ -361,6 +461,10 @@ function convolve(kernel) {
      context.putImageData(output,0,0);
 }
 
+/*
+ * Lineare Faltung für separierbare Filter.
+ * Superlangsam durch zahlreiche Schleifen! Besserer Algorithmus nötig.
+ */
 function convolveSeperable(kernelX, kernelY) {
     if(kernelX == null || kernelY == null) return;
     pixels = context.getImageData(0,0,canvas.width,canvas.height);
@@ -370,11 +474,22 @@ function convolveSeperable(kernelX, kernelY) {
     var w = pixels.width;
     var h = pixels.height;
 
-    for(var y = 1; y < h-1; y++) {
-        for(var x = 1; x < w-1; x++) {
+    var lengthX = Math.floor(kernelX.length/2);
+    var lengthY = Math.floor(kernelY.length/2);
+
+    for(var y = lengthY; y < h-lengthY; y++) {
+        for(var x = lengthX; x < w-lengthX; x++) {
             for(var c = 0; c < 3; c++) {
                 var i = (y*w + x) * 4 + c;
-                outputData[i] = kernelX[0] * inputData[i - 4] + kernelX[1] * inputData[i] + kernelX[2] * inputData[i + 4];
+
+                var sum = 0;
+                for(var a = -lengthX; a <= lengthX; a++)
+                    sum += kernelX[a+lengthX] * inputData[i + a*4];
+                outputData[i] = sum;
+
+                /* outputData[i] = kernelX[0] * inputData[i - 4]
+                            + kernelX[1] * inputData[i]
+                            + kernelX[2] * inputData[i + 4]; */
             }
         }
     }
@@ -383,7 +498,15 @@ function convolveSeperable(kernelX, kernelY) {
         for(var x = 1; x < w-1; x++) {
             for(var c = 0; c < 3; c++) {
                 var i = (y*w + x) * 4 + c;
-                outputData[i] = kernelY[0] * outputData[i - w*4] + kernelY[1] * outputData[i] + kernelY[2] * outputData[i + w*4];
+
+                var sum = 0;
+                for(var a = -lengthY; a <= lengthY; a++)
+                    sum += kernelY[a+lengthY] * outputData[i + a*w*4];
+                outputData[i] = sum;
+
+                /* outputData[i] = kernelY[0] * outputData[i - w*4]
+                            + kernelY[1] * outputData[i]
+                            + kernelY[2] * outputData[i + w*4]; */
             }
             outputData[(y*w + x) * 4 + 3] = 255;
         }
@@ -392,6 +515,9 @@ function convolveSeperable(kernelX, kernelY) {
     context.putImageData(output,0,0);
 }
 
+/*
+ * Invertiert das aktuelle Bild und gibt es zurück.
+ */
 function invert() {
     pixels = context.getImageData(0,0,canvas.width, canvas.height);
     data = pixels.data;
@@ -400,11 +526,14 @@ function invert() {
         data[i + 1] = 255 - data[i + 1];
         data[i + 2 ]= 255 - data[i + 2];
     }
-    pixels.data = data;
     context.putImageData(pixels,0,0);
 }
 
-function sw() {
+/*
+ * Entsättigt das Bild in Abhängigkeit vom Slider.
+ * Gewichtung der Grauwerte wird vernachlässigt.
+ */
+function sww() {
     pixels = context.getImageData(0,0,canvas.width, canvas.height);
     data = pixels.data;
     if(saturation == 0) return;
@@ -427,10 +556,50 @@ function sw() {
         data[i+1] = g;
         data[i+2] = b;
     }
-    pixels.data = data;
     context.putImageData(pixels, 0, 0);
 }
 
+/*
+ * Entsättigt das Bild in Abhängig vom Slider.
+ * Gewichtung der Grauwerte stimmt.
+ */
+function sw() {
+    pixels = context.getImageData(0,0,canvas.width, canvas.height);
+    data = pixels.data;
+    var s = saturation/100;
+    for(var i = 0; i < data.length; i+=4) {
+        var r = data[i];
+        var g = data[i + 1];
+        var b = data[i + 2];
+
+        var y = 0.299 * r + 0.587 * g + 0.114 * b;
+
+        data[i] = y + s * (r - y);
+        data[i + 1] = y + s * (g - y);
+        data[i + 2] = y + s * (b - y);
+    }
+    context.putImageData(pixels, 0, 0);
+}
+
+/*
+ * Setzt alle Pixel, die unterhalb des Schwellenwerts low liegen auf 0,
+ * und alle Pixel, die oberhalb des Schewellenwerts high liegen auf 255.
+ */
+
+function contrast() {
+    pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+    data = pixels.data;
+    for(var i = 0; i < data.length; i++) {
+        if((i+1) % 4 == 0) continue;
+        if(data[i] < low) data[i] = 0;
+        else if(data[i] > high) data[i] = 255;
+    }
+    context.putImageData(pixels, 0, 0);
+}
+
+/*
+ * Methode gibt msg auf der Error-Konsole aus. Ersatz für das in Java beliebte System.out.print();
+ */
 function log(msg) {
     setTimeout(function() {
         throw new Error(msg);
