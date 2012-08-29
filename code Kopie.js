@@ -1,6 +1,9 @@
 /*
  * Deklarierung diverser globaler Variablen
  */
+var video;
+var canvas;
+var context;
 var type = 'original';
 var slider = 0;
 var saturation = 100;
@@ -164,10 +167,10 @@ function changeKernel() {
 /*
  * Instanzvariablen, die für den FPS-Counter notwendig sind
  */
-var drawInterval = 16.666666667;
+var drawInterval = 1;
 var frameCount = 0;
 var fps = 0;
-var maxfps = Math.floor(1 + 1 / (drawInterval / 1000));
+var maxfps = 1 / (drawInterval / 1000);
 var lastTime = new Date();
 
 /*
@@ -207,14 +210,14 @@ function init() {
     initKernel();
     changeKernel();
 
-    var video = document.getElementById('video');
-    var canvas = document.getElementById('canvas');
-    var context = canvas.getContext('2d');
+    video = document.getElementById('video');
+    canvas = document.getElementById('canvas');
+    context = canvas.getContext('2d');
 
     video.addEventListener('play', function() {
         canvas.height = video.clientHeight;
         canvas.width = video.clientWidth;
-        draw(video, canvas, context);
+        draw();
     }, false);
 }
 
@@ -223,10 +226,10 @@ function init() {
  * FPS-Berechnungen und Ausgabe.
  * processImage() prozessiert das aktuelle Bild.
  */
-function draw(video, canvas, context) {
+function draw() {
     if(video.paused || video.ended) return false;
     context.drawImage(video,0,0);
-    processImage(canvas, context);
+    processImage();
     var nowTime = new Date();
     var diffTime = Math.ceil((nowTime.getTime() - lastTime.getTime()));
     if (diffTime >= 1000) {
@@ -242,7 +245,7 @@ function draw(video, canvas, context) {
     context.fillText('FPS: ' + fps + '/' + maxfps, 4, canvas.height - 4);
     context.restore();
     frameCount++;
-    setTimeout(function() { draw(video, canvas, context) },drawInterval);
+    setTimeout(draw,drawInterval);
 }
 
 /*
@@ -250,61 +253,87 @@ function draw(video, canvas, context) {
  * Startet den zugehörigen Effekt, abhängig von der Auswahl im Dropdown-Menü.
  * Iteration bspw. bei Gaussian Blur.
  */
-function processImage(canvas, context) {
-    if(saturation < 100) sw(canvas, context);
-    if(low > 0 || high < 255)
-        contrast(canvas, context);
-    if(type == 'original')
-        return;
-    else if(type == 'box')
-        convolve(boxKernel, canvas, context);
-    else if(type == 'invert')
-        invert(canvas, context);
-    else if(type == 'sobel')
-        convolve(sobelKernel, canvas, context);
-    else if(type == 'laplace')
-        convolve(laplaceKernel, canvas, context);
-    else if(type == 'laplacedia')
-        convolve(laplaceKernelDiagonal, canvas, context);
-    else if(type == 'laplace5x5')
-        convolveVariable(laplace5x5, canvas, context);
-    else if(type == 'gaussian') {
+
+var filters = {
+    box: function() {
+        convolve(boxKernel);
+    },
+    invert: function() {
+        invert();
+    },
+    sobel: function() {
+        convolve(sobelKernel);
+    },
+    laplace: function() {
+        convolve(laplaceKernel);
+    },
+    laplacedia: function() {
+        convolve(laplaceKernelDiagonal);
+    },
+    laplace5x5: function() {
+        convolveVariable(laplace5x5);
+    },
+    gaussian: function() {
         $("#slider").show();
         for(var i = 0; i <= slider; i++) {
-            convolve(gaussianKernel, canvas, context);
+            convolve(gaussianKernel);
         }
-    } else if(type == 'prewittX') {
-        convolve(prewittX, canvas, context);
-    } else if(type == 'prewittY') {
-        convolve(prewittY, canvas, context);
-    } else if(type == 'sharpen')
-        convolve(sharpenKernel, canvas, context);
-    else if(type == 'relief') {
-        convolve(reliefKernel, canvas, context);
-    } else if(type == 'gausssep')
-        convolveSeperable(gaussX, gaussY, canvas, context);
-    else if(type == 'sobelsep')
-        convolveSeperable(sobelX, sobelY, canvas, context);
-    else if(type == 'boxsep')
-        convolveSeperable(boxX, boxY, canvas, context);
-    else if(type == 'varsharpen') {
+    },
+    prewittX: function() {
+        convolve(prewittX);
+    },
+    prewittY: function() {
+        convolve(prewittY);
+    },
+    sharpen: function() {
+        convolve(sharpenKernel);
+    },
+    relief: function() {
+        convolve(reliefKernel);
+    },
+    gausssep: function() {
+        convolveSeperable(gaussX, gaussY);
+    },
+    sobelsep: function() {
+        convolveSeperable(sobelX, sobelY);
+    },
+    boxsep: function() {
+        convolveSeperable(boxX, boxY);
+    },
+    varsharpen: function() {
         $("#slider").show();
-        convolve(varSharpenKernel, canvas, context);
-    } else if(type == 'mosaic') {
+        convolve(sharpenKernel);
+    },
+    mosaic: function() {
         $("#slider").show();
-        mosaic(canvas, con
-          ttext);
-    } else if(type == 'gauss5x5') {
-        convolveVariable(gaussiangross, canvas, context);
-    } else if(type == 'highpass') {
-        convolveVariable(highpass, canvas, context);
-    } else if(type == 'sobelcross') {
-        convolveVariable(sobelcross, canvas, context);
-    } else if(type == 'sobelvert') {
-        convolveVariable(sobelvert, canvas, context);
-    } else if(type == 'sobelhor') {
-        convolveVariable(sobelhor, canvas, context);
-    }
+        mosaic();
+    },
+    gauss5x5: function() {
+        convolveVariable(gaussiangross);
+    },
+    highpass: function() {
+        convolveVariable(highpass);
+    },
+    sobelcross: function() {
+        convolveVariable(sobelcross);
+    },
+    sobelvert: function() {
+        convolveVariable(sobelvert);
+    },
+    sobelhor: function() {
+        convolveVariable(sobelhor);
+    },
+    original: function() {
+        return;
+    },
+    sw: sw,
+    contrast: contrast
+}
+
+function processImage() {
+    if(saturation < 100) filters[sw]();
+    if(low > 0 || high < 255) filters[contrast]();
+    filters[type]();
 }
 
 /*
@@ -359,7 +388,7 @@ function normalizeKernel2D(kernel) {
  * Effekt baut ein wunderbares Mosaik.
  * Kann über Slider in der größe der Rechtecke variiert werden.
  */
-function mosaic(canvas, context) {
+function mosaic() {
     var pixels = context.getImageData(0,0,canvas.width, canvas.height);
     var output = context.createImageData(canvas.width, canvas.height);
     var inputData = pixels.data;
@@ -403,7 +432,7 @@ function mosaic(canvas, context) {
  * Lineare Faltung für beliebig große Filterkerne.
  * Optimierungsbedarf: Performance.
  */
-function convolveVariable(kernel, canvas, context) {
+function convolveVariable(kernel) {
     if(kernel == null) return;
     var pixels = context.getImageData(0,0,canvas.width, canvas.height);
     var output = context.createImageData(canvas.width, canvas.height);
@@ -436,7 +465,7 @@ function convolveVariable(kernel, canvas, context) {
 /*
  * Leicht optimierte Variante der linearen Faltung ausschließlich für 3x3-Filterkerne.
  */
-function convolve(kernel, canvas, context) {
+function convolve(kernel) {
     if(kernel == null) return;
     var pixels = context.getImageData(0,0,canvas.width, canvas.height);
     var output = context.createImageData(canvas.width, canvas.height);
@@ -463,7 +492,7 @@ function convolve(kernel, canvas, context) {
  * Lineare Faltung für separierbare Filter.
  * Superlangsam durch zahlreiche Schleifen! Besserer Algorithmus nötig.
  */
-function convolveSeperable(kernelX, kernelY, canvas, context) {
+function convolveSeperable(kernelX, kernelY) {
     if(kernelX == null || kernelY == null) return;
     var pixels = context.getImageData(0,0,canvas.width,canvas.height);
     var output = context.createImageData(canvas.width, canvas.height);
@@ -516,7 +545,7 @@ function convolveSeperable(kernelX, kernelY, canvas, context) {
 /*
  * Invertiert das aktuelle Bild und gibt es zurück.
  */
-function invert(canvas, context) {
+function invert() {
     var pixels = context.getImageData(0,0,canvas.width, canvas.height);
     var data = pixels.data;
     for(var i = 0; i < data.length; i+=4) {
@@ -531,37 +560,37 @@ function invert(canvas, context) {
  * Entsättigt das Bild in Abhängigkeit vom Slider.
  * Gewichtung der Grauwerte wird vernachlässigt.
  */
-// function sww() {
-//     var pixels = context.getImageData(0,0,canvas.width, canvas.height);
-//     var data = pixels.data;
-//     if(saturation == 0) return;
-//     for(var i = 0; i < data.length; i+=4) {
-//         var r = data[i];
-//         var g = data[i + 1];
-//         var b = data[i + 2];
-//         var faktor =  100/saturation;
-//         if(g > r && g > b) {
-//             b += (g - b) / faktor;
-//             r += (g - r) / faktor;
-//         } else if(r > g && r > b) {
-//             g += (r - g) / faktor;
-//             b += (r - b) / faktor;
-//         } else {
-//             r += (b - r) / faktor;
-//             g += (b - g) / faktor;
-//         }
-//         data[i] = r;
-//         data[i+1] = g;
-//         data[i+2] = b;
-//     }
-//     context.putImageData(pixels, 0, 0);
-// }
+function sww() {
+    var pixels = context.getImageData(0,0,canvas.width, canvas.height);
+    var data = pixels.data;
+    if(saturation == 0) return;
+    for(var i = 0; i < data.length; i+=4) {
+        var r = data[i];
+        var g = data[i + 1];
+        var b = data[i + 2];
+        var faktor =  100/saturation;
+        if(g > r && g > b) {
+            b += (g - b) / faktor;
+            r += (g - r) / faktor;
+        } else if(r > g && r > b) {
+            g += (r - g) / faktor;
+            b += (r - b) / faktor;
+        } else {
+            r += (b - r) / faktor;
+            g += (b - g) / faktor;
+        }
+        data[i] = r;
+        data[i+1] = g;
+        data[i+2] = b;
+    }
+    context.putImageData(pixels, 0, 0);
+}
 
 /*
  * Entsättigt das Bild in Abhängig vom Slider.
  * Gewichtung der Grauwerte stimmt.
  */
-function sw(canvas, context) {
+var sw = function() {
     var pixels = context.getImageData(0,0,canvas.width, canvas.height);
     var data = pixels.data;
     var s = saturation/100;
@@ -583,8 +612,7 @@ function sw(canvas, context) {
  * Setzt alle Pixel, die unterhalb des Schwellenwerts low liegen auf 0,
  * und alle Pixel, die oberhalb des Schewellenwerts high liegen auf 255.
  */
-
-function contrast(canvas, context) {
+var contrast = function() {
     var pixels = context.getImageData(0, 0, canvas.width, canvas.height);
     var data = pixels.data;
     for(var i = 0; i < data.length; i++) {

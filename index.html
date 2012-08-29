@@ -1,88 +1,62 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
   <head>
-    <meta charset="utf-8">
-    <title>Videobearbeitung</title>
-    <link rel="stylesheet" href="css/bootstrap.min.css">
-    <link rel="stylesheet" href="css/ui-lightness/jquery.css">
+    <title>SS 2012 -- Webengineering -- Luigi Lo Iacono</title>
+    <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="content-language" content="de">
+  <meta name="robots" content="index,follow">
+    <meta name="author" content="Luigi Lo Iacono">
+  <meta name="publisher" content="Luigi Lo Iacono">
+  <meta name="description" content="This site compiles research, development and teaching activities of Luigi Lo Iacono in the area of Web, Web Development, Web Security, Cloud, Cloud Security and Usable Security.">
+  <meta name="keywords" content="Luigi Lo Iacono,Web,Web Development,Web Security,Cloud,Cloud Security,Usable Security,Projects,Teaching,Publications">
+  <link href="http://lli.web.fh-koeln.de/images/favicon.ico" rel="shortcut icon" type="image/x-icon">
+    <link href="http://lli.web.fh-koeln.de/css/styles.css" rel="stylesheet" type="text/css">
+  <link href="http://lli.web.fh-koeln.de/css/logomap.css" rel="stylesheet" type="text/css">
     <script src="jquery/jquery.js"></script>
     <script src="jquery/jqueryui.js"></script>
     <script src="code.js"></script>
-    <style type="text/css">
-      /* Override some defaults */
-      html, body {
-        background-color: #eee;
-      }
-      body {
-        padding-top: 0px; /* 40px to make the container go all the way to the bottom of the topbar */
-      }
-      .container > footer p {
-        text-align: center; /* center align it with the container */
-      }
-      .container {
-        width: 820px; /* downsize our container to make the content feel a bit tighter and more cohesive. NOTE: this removes two full columns from the grid, meaning you only go to 14 columns and not 16. */
-      }
+        <link rel="stylesheet" href="css/ui-lightness/jquery.css">
 
-      /* The white background content wrapper */
-      .content {
-        background-color: #fff;
-        padding: 20px;
-        margin: 0 -20px; /* negative indent the amount of the padding to maintain the grid system */
-        -webkit-border-radius: 0 0 6px 6px;
-           -moz-border-radius: 0 0 6px 6px;
-                border-radius: 0 0 6px 6px;
-        -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.15);
-           -moz-box-shadow: 0 1px 2px rgba(0,0,0,.15);
-                box-shadow: 0 1px 2px rgba(0,0,0,.15);
-      }
-
-      /* Page header tweaks */
-      .page-header {
-        background-color: #f5f5f5;
-        padding: 20px 20px 10px;
-        margin: -20px -20px 20px;
-      }
-
-      /* Styles you shouldn't keep as they are for displaying this base example only */
-      .content .span10,
-      .content .span4 {
-        min-height: 500px;
-      }
-      /* Give a quick and non-cross-browser friendly divider */
-      .content .span4 {
-        margin-left: 0;
-        padding-left: 19px;
-        border-left: 1px solid #eee;
-      }
-
-      .topbar .btn {
-        border: 0;
-      }
-
-      .video {
-        padding-top: 40px;
-        text-align: center;
-      }
-
-    </style>
   </head>
+
   <body onload="init()">
-    <div class="container">
-      <div class="content">
-        <div class="page-header">
-          <h1>Beispiel</h1>
-          <small>Echtzeit-Bildverarbeitung mit JavaScript</small>
-        </div>
-        <div class="row">
-          <div class="span10">
-            <div class="display">
-              <canvas id=canvas></canvas>
-              <video id=video controls loop>
-                <source src=film.mp4 type=video/mp4>
-              </video>
-            </div>
+    <div id="header">
+    <div id="header-logo-image">
+        <img src="http://lli.web.fh-koeln.de/images/lli.png" alt="lli -- Luigi Lo Iacono">
+      </div>
+      <div id="header-logo-text">
+        Luigi Lo Iacono
+      </div>
+    </div>
+
+    <div id="pagewidth">
+      <div id="wrapper" class="clearfix">
+        <div id="sidebar">
+          <div id="navi">
+            <ul id="navi-list">
+              <li><a title="Home" href="index.html">Home</a></li>
+        <li><a title="Teaching" href="teaching.html">Teaching</a></li>
+        <li><a title="Theses" href="theses.html">Theses</a></li>
+        <li><a title="Projects" href="projects.html">Projects</a></li>
+              <li><a title="Publications" href="publications.html">Publications</a></li>
+              <li><a title="External playground" href="#">Playground</a></li>
+            </ul>
           </div>
-          <div class="span4">
+        </div>
+    <ul id="logos">
+            <li id="fhk"><a title="Cologne University of Applied Sciences" href="http://www.fh-koeln.de/"><span>Cologne University of Appliend Sciences</span></a></li>
+            <li id="imp"><a title="Institute for Media and Imaging Technologies" href="http://www.f07.fh-koeln.de/einrichtungen/imp/"><span>Institute for Media and Imaging Technologies</span></a></li>
+        </ul>
+
+        <div id="main">
+          <h1>Webengineering (SS 2012)</h1>
+          <br>
+          <div class="display" style="padding-bottom: 10px; min-height: 300px;">
+            <canvas id=canvas></canvas>
+            <video id=video controls loop style="">
+              <source src=film.mp4 type=video/mp4>
+            </video>
+          </div>
             <div style="padding-bottom: 10px;">
               <select onchange="setType(this.options[this.selectedIndex].value)">
                 <option value="original">Original</option>
@@ -107,14 +81,16 @@
                 <option value="gauss5x5">Gauss 5x5</option>
                 <option value="highpass">Hochpass</option>
               </select>
-            </div>
-            <div id="slider"></div>
-            <br>
+              <br /> <br />
+            <div id="slider" style="width: 200px;"></div>
             <p>Sättigung:</p>
-            <div id="saturation"></div>
-            <br>
+            <div id="saturation" style="width: 200px;"></div>
             <p>Tonwertkorrektur:</p>
-            <div id="contrast"></div>
+            <div id="contrast" style="width: 200px;"></div>
+            </div>
+
+          <div id="footer">
+            Copyright &copy; 2012 <a href="index.html">Luigi Lo Iacono</a> &middot; <a href="index.html#contact">Contact</a> &middot; <a href="imprint.html">Imprint</a> &middot; <a href="http://validator.w3.org/check?uri=http://lli.web.fh-koeln.de/teaching/ws11-wp.html">Valid HTML!</a>
           </div>
         </div>
       </div>
